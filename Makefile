@@ -1,0 +1,9 @@
+
+EMCC ?= em++
+# STACK_SIZE=256kB;  INITIAL_MEMORY=64MB
+EMCC_FLAGS ?= -O2 -sSTACK_SIZE=262144 -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=1
+
+all: lbm
+
+lbm: lbm.cpp
+	$(EMCC) $(EMCC_FLAGS) lbm.cpp -o index.html

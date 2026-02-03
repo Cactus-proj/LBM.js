@@ -76,54 +76,40 @@ void init(float rho[101][101], float f[9][101][101], float u[101][101], float v[
 
 void collision(float u[101][101], float v[101][101], float f[9][101][101], float rho[101][101], float w[9], float cx[9], float cy[9], int n, int m, float omega, float tm[9][9], float tminv[9][9], float stmiv[9][9], float sm[9])
 {
-	float feq[9][101][101], fmom[9][101][101], fmeq[9][101][101];
-	float t1,t2,suma,sumb;
+	float t1, t2, suma, sumb;
 	int i, j, l, k;
-	//计算平衡时间
-	for (i = 0; i <= n; i++)
+	for (j = 0; j <= m; j++)
 	{
-		for (j = 0; j <= m; j++)
+		for (i = 0; i <= n; i++)
 		{
+			float fmom_cell[9];
+			float fmeq_cell[9];
 			t1 = u[i][j] * u[i][j] + v[i][j] * v[i][j];
 			t2 = u[i][j] * u[i][j] - v[i][j] * v[i][j];
-			fmeq[0][i][j] = rho[i][j];
-			fmeq[1][i][j] = rho[i][j] * (-2.0 + 3.0*rho[i][j] * t1);
-			fmeq[2][i][j] = rho[i][j] * (1.0 - 3.0*rho[i][j] * t1);
-			fmeq[3][i][j] = rho[i][j] * u[i][j];
-			fmeq[4][i][j] = -rho[i][j] * u[i][j];
-			fmeq[5][i][j] = rho[i][j] * v[i][j];
-			fmeq[6][i][j] = -rho[i][j] * v[i][j];
-			fmeq[7][i][j] = rho[i][j] * t2;
-			fmeq[8][i][j] = rho[i][j] * u[i][j] * v[i][j];
-		}
-	}
-	//计算时间
-	for ( j = 0; j <= m; j++)
-	{
-		for ( i = 0; i <= n; i++)
-		{
-			for ( k = 0; k <= 8; k++)
+			fmeq_cell[0] = rho[i][j];
+			fmeq_cell[1] = rho[i][j] * (-2.0 + 3.0*rho[i][j] * t1);
+			fmeq_cell[2] = rho[i][j] * (1.0 - 3.0*rho[i][j] * t1);
+			fmeq_cell[3] = rho[i][j] * u[i][j];
+			fmeq_cell[4] = -rho[i][j] * u[i][j];
+			fmeq_cell[5] = rho[i][j] * v[i][j];
+			fmeq_cell[6] = -rho[i][j] * v[i][j];
+			fmeq_cell[7] = rho[i][j] * t2;
+			fmeq_cell[8] = rho[i][j] * u[i][j] * v[i][j];
+			for (k = 0; k <= 8; k++)
 			{
 				suma = 0.0;
-				for ( l = 0; l <= 8; l++)
+				for (l = 0; l <= 8; l++)
 				{
 					suma = suma + tm[k][l] * f[l][i][j];
 				}
-				fmom[k][i][j] = suma;
+				fmom_cell[k] = suma;
 			}
-		}
-	}
-	//计算时间空间中的碰撞
-	for ( j = 0; j <= m; j++)
-	{
-		for ( i = 0; i <= n; i++)
-		{
-			for ( k = 0; k <= 8; k++)
+			for (k = 0; k <= 8; k++)
 			{
 				sumb = 0.0;
-				for ( l = 0; l <= 8; l++)
+				for (l = 0; l <= 8; l++)
 				{
-					sumb = sumb + stmiv[k][l] * (fmom[l][i][j] - fmeq[l][i][j]);
+					sumb = sumb + stmiv[k][l] * (fmom_cell[l] - fmeq_cell[l]);
 				}
 				f[k][i][j] = f[k][i][j] - sumb;
 			}
@@ -249,7 +235,15 @@ int main()
 {
 	const int n = 100, m = 100, mstep=1000;
 	int i, j, l, kk;
-	float f[9][n + 1][m + 1], rho[n + 1][m + 1], w[9], cx[9], cy[9], u[n + 1][m + 1], v[n + 1][m + 1], stmiv[9][9], ev[9][9], x[n + 1], y[m + 1], velocity[n+1][m+1];
+	float w[9], cx[9], cy[9], stmiv[9][9], ev[9][9];
+	// 动态分配内存以避免栈溢出
+	auto f = new float[9][n + 1][m + 1];
+	auto rho = new float[n + 1][m + 1];
+	auto u = new float[n + 1][m + 1];
+	auto v = new float[n + 1][m + 1];
+	auto velocity = new float[n + 1][m + 1];
+	auto x = new float[n + 1];
+	auto y = new float[m + 1];
 	float dx, dy, dt, a1, sumcc, uo, rhoo, alpha, omega, Re, tau;
 	dx = 1.0, dy = dx, dt = 1.0;
 	xy(x, y, dx, dy, n, m);
@@ -257,6 +251,8 @@ int main()
 	static float tm[9][9] = { { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 }, { -4.0, -1.0, -1.0, -1.0, -1.0, 2.0, 2.0 ,2.0 ,2.0 }, { 4.0, -2.0, -2.0, -2.0, -2.0, 1.0, 1.0, 1.0, 1.0 }, { 0.0, 1.0, 0.0, -1.0, 0.0, 1.0, -1.0, -1.0, 1.0 }, { 0.0, -2.0, 0.0, 2.0, 0.0, 1.0, -1.0, -1.0, 1.0 }, { 0.0, 0.0, 1.0, 0.0, -1.0, 1.0, 1.0, -1.0, -1.0 }, { 0.0, 0.0, -2.0, 0.0, 2.0, 1.0, 1.0, -1.0, -1.0 }, { 0.0, 1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, -1.0, 1.0, -1.0 } };
 	a1 = 1.0 / 36.0;
 	static float tminv[9][9] = { { 4 * a1, -4 * a1, 4 * a1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, { 4 * a1, -a1, -2 * a1, 6 * a1, -6 * a1, 0.0, 0.0, 9 * a1, 0.0 }, { 4 * a1, -a1, -2 * a1, 0.0, 0.0, 6 * a1, -6 * a1, -9 * a1, 0.0 }, { 4 * a1, -a1, -2 * a1, -6 * a1, 6 * a1, 0.0, 0.0, 9 * a1, 0.0 },{ 4 * a1, -a1, -2 * a1, 0.0, 0.0, -6 * a1, 6 * a1, -9 * a1, 0.0 }, {4 * a1, 2 * a1, a1, 6 * a1, 3 * a1, 6 * a1, 3 * a1, 0.0, 9 * a1 },{ 4 * a1, 2 * a1, a1, -6 * a1, -3 * a1, 6 * a1, 3 * a1, 0.0, -9 * a1 }, { 4 * a1, 2 * a1, a1, -6 * a1, -3 * a1, -6 * a1, -3 * a1, 0.0, 9 * a1 }, { 4 * a1, 2 * a1, a1, 6 * a1, 3 * a1, -6 * a1, -3 * a1, 0.0, -9 * a1 } };
+
+	cout << "(m" << m << ", n=" << n << ", mstep=" << mstep << ")" << endl;
 	/*ofstream arrayout;
 	arrayout.open("arrayout.dat");
 	for ( i = 0; i <= 8; i++)
@@ -293,6 +289,8 @@ int main()
 		}
 	}
 	init(rho, f, u, v, n, m, rhoo, uo, w);
+
+	cout << "Start computing..." << endl;
 	for ( kk = 1; kk <= mstep; kk++)
 	{
 		collision(u, v, f, rho, w, cx, cy, n, m, omega, tm, tminv, stmiv, sm);
@@ -307,19 +305,30 @@ int main()
 			velocity[i][j] = sqrt(u[i][j] * u[i][j] + v[i][j] * v[i][j]);
 		}
 	}
+	cout << "Finish computing." << endl;
 
 	// ofstream fout;
 	// fout.open("Data.dat", ios::app);
 	ostream& fout = cout;  // Use stdout
 	fout << "TITLE = \"Data\"\nvariables = X,Y,U,V,Velocity\nZone t=\"data\"\nI=101,J=101,F=POINT" << endl;
-	for (j = 0; j <= m; j++)
-	{
-		for (i = 0; i <= n; i++)
-		{
-			fout << x[i] << "\t" << y[j] << "\t" << u[i][j] << "\t" << v[i][j] << "\t" << velocity[i][j] << endl;
-		}
-	}
+	// for (j = 0; j <= m; j++)
+	// {
+	// 	for (i = 0; i <= n; i++)
+	// 	{
+	// 		fout << x[i] << "\t" << y[j] << "\t" << u[i][j] << "\t" << v[i][j] << "\t" << velocity[i][j] << endl;
+	// 	}
+	// }
 	// fout.close();
+
+	// 释放内存
+	delete[] f;
+	delete[] rho;
+	delete[] u;
+	delete[] v;
+	delete[] velocity;
+	delete[] x;
+	delete[] y;
+
     return 0;
 }
 
