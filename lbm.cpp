@@ -247,7 +247,7 @@ void rhouv(float f[9][101][101], float rho[101][101], float u[101][101], float v
 
 int main()
 {
-	const int n = 100, m = 100, mstep=100000;
+	const int n = 100, m = 100, mstep=1000;
 	int i, j, l, kk;
 	float f[9][n + 1][m + 1], rho[n + 1][m + 1], w[9], cx[9], cy[9], u[n + 1][m + 1], v[n + 1][m + 1], stmiv[9][9], ev[9][9], x[n + 1], y[m + 1], velocity[n+1][m+1];
 	float dx, dy, dt, a1, sumcc, uo, rhoo, alpha, omega, Re, tau;
