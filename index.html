@@ -37,16 +37,16 @@
 
     <div id="plots" style="display: flex; flex-wrap: wrap; gap: 20px;">
         <div>
-            <h3>Velocity Magnitude</h3>
-            <canvas id="canvas_vel" width="100" height="100" style="border: 1px dashed #ccc;"></canvas>
-        </div>
-        <div>
             <h3>U Component</h3>
             <canvas id="canvas_u" width="100" height="100" style="border: 1px dashed #ccc;"></canvas>
         </div>
         <div>
             <h3>V Component</h3>
             <canvas id="canvas_v" width="100" height="100" style="border: 1px dashed #ccc;"></canvas>
+        </div>
+        <div>
+            <h3>Velocity Magnitude</h3>
+            <canvas id="canvas_vel" width="100" height="100" style="border: 1px dashed #ccc;"></canvas>
         </div>
     </div>
 
@@ -100,9 +100,9 @@
                 try {
                     const result = runSimulation(Module, n, m, mstep);
                     if (result) {
-                        drawHeatmap('canvas_vel', result.vel, result.nx, result.ny);
                         drawHeatmap('canvas_u', result.u, result.nx, result.ny);
                         drawHeatmap('canvas_v', result.v, result.nx, result.ny);
+                        drawHeatmap('canvas_vel', result.vel, result.nx, result.ny);
                         Module.print("Visualization updated.");
                     }
                 } catch(e) {
