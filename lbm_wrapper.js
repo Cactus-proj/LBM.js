@@ -68,6 +68,12 @@ function runSimulation(Module, n = 100, m = 100, mstep = 1000) {
     print(`Center Velocity (approx check): ${centerVal}`);
 
 
+    // Read data back to JS arrays before freeing
+    // We use new Float32Array to create a copy, because the underlying HEAPF32 might change or be reallocated
+    const uArr = new Float32Array(Module.HEAPF32.subarray(ptr_u / 4, ptr_u / 4 + nx * ny));
+    const vArr = new Float32Array(Module.HEAPF32.subarray(ptr_v / 4, ptr_v / 4 + nx * ny));
+    const velArr = new Float32Array(Module.HEAPF32.subarray(ptr_vel / 4, ptr_vel / 4 + nx * ny));
+
     // Free memory
     Module._free(ptr_f);
     Module._free(ptr_rho);
@@ -78,4 +84,12 @@ function runSimulation(Module, n = 100, m = 100, mstep = 1000) {
     Module._free(ptr_y);
     
     print("Memory freed.");
+
+    return {
+        u: uArr,
+        v: vArr,
+        vel: velArr,
+        nx: nx,
+        ny: ny
+    };
 }
