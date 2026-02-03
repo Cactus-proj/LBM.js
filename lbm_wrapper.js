@@ -1,15 +1,6 @@
 var Module = {
     onRuntimeInitialized: function() {
         this.print("Module loaded.");
-
-        try {
-            this.print("runSimulation(): started.");
-            runSimulation(Module);
-        } catch (e) {
-            this.print("Error: " + e.message);
-            console.error(e);
-        }
-        this.print("runSimulation(): finished.");
     },
     print: function(text) {
         const outputDiv = document.getElementById('output');
@@ -20,11 +11,8 @@ var Module = {
     }
 };
 
-function runSimulation(Module) {
+function runSimulation(Module, n = 100, m = 100, mstep = 1000) {
     const print = Module.print;
-    const n = 100;
-    const m = 100;
-    const mstep = 1000;
     const nx = n + 1;
     const ny = m + 1;
     const floatSize = 4;

@@ -7,13 +7,45 @@
     <style>
         body { font-family: monospace; padding: 20px; }
         #output { background: #f0f0f0; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+        .controls { margin-bottom: 15px; padding: 10px; background: #e8e8e8; border-radius: 4px; }
+        .controls label { margin-right: 15px; }
+        .controls input { width: 60px; }
+        .controls button { padding: 5px 15px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>LBM Lid Driven Flow</h1>
+    
+    <div class="controls">
+        <label>N: <input type="number" id="val_n" value="100" readonly></label>
+        <label>M: <input type="number" id="val_m" value="100" readonly></label>
+        <label>MSteps: <input type="number" id="val_mstep" value="1000"></label>
+        <button id="startBtn" onclick="startSim()">Start Calculation</button>
+    </div>
+
     <p>Running simulation via WebAssembly with JS memory allocation...</p>
     <div id="output">Initializing...</div>
 
+    <script src="lbm_wrapper.js"></script>
+    <script>
+        function startSim() {
+            const n = parseInt(document.getElementById('val_n').value);
+            const m = parseInt(document.getElementById('val_m').value);
+            const mstep = parseInt(document.getElementById('val_mstep').value);
+            
+            document.getElementById('output').innerHTML += `\n--- Starting Simulation (n=${n}, m=${m}, steps=${mstep}) ---\n`;
+            
+            // Use setTimeout to ensure the print above renders before the heavy calculation
+            setTimeout(() => {
+                try {
+                    runSimulation(Module, n, m, mstep);
+                } catch(e) {
+                    console.error(e);
+                    Module.print("Error during simulation: " + e.message);
+                }
+            }, 50);
+        }
+    </script>
     <script src="lbm.js"></script>
 </body>
 </html>
