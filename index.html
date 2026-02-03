@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LBM Lid Driven Flow (JS Memory)</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        #output { background: #f0f0f0; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; }
+        .controls { margin-bottom: 15px; padding: 10px; background: #e8e8e8; border-radius: 4px; }
+        .controls label { margin-right: 15px; }
+        .controls input { width: 60px; }
+        .controls button { padding: 5px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>LBM Lid Driven Flow</h1>
+    
+    <div class="controls">
+        <p style="margin: 0 0 10px 0; color: #d9534f; font-size: 0.9em;">(cpp 把 n,m 定死了，目前无法修改，mstep 可以修改)</p>
+        <label>N: <input type="number" id="val_n" value="100" readonly></label>
+        <label>M: <input type="number" id="val_m" value="100" readonly></label>
+        <label>MSteps: <input type="number" id="val_mstep" value="1000"></label>
+        <button id="startBtn" onclick="startSim()">Start Calculation</button>
+    </div>
+
+    <div id="plots" style="display: flex; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h3>Velocity Magnitude</h3>
+            <canvas id="canvas_vel" width="100" height="100" style="border: 1px dashed #ccc;"></canvas>
+        </div>
+        <div>
+            <h3>U Component</h3>
+            <canvas id="canvas_u" width="100" height="100" style="border: 1px dashed #ccc;"></canvas>
+        </div>
+        <div>
+            <h3>V Component</h3>
+            <canvas id="canvas_v" width="100" height="100" style="border: 1px dashed #ccc;"></canvas>
+        </div>
+    </div>
+
+    <p>Running simulation via WebAssembly with JS memory allocation...</p>
+    <div id="output">Initializing...</div>
+
+    <script src="lbm_wrapper.js"></script>
+    <script>
+        function drawHeatmap(canvasId, data, nx, ny) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const scale = 2; // Scale factor
+            canvas.width = nx * scale;
+            canvas.height = ny * scale;
+
+            // Find min/max
+            let min = Infinity, max = -Infinity;
+            for (let i = 0; i < data.length; i++) {
+                if (data[i] < min) min = data[i];
+                if (data[i] > max) max = data[i];
+            }
+            const range = max - min || 1;
+
+            // Draw
+            // Assuming data index = i * ny + j, where i is x, j is y
+            for (let i = 0; i < nx; i++) {
+                for (let j = 0; j < ny; j++) {
+                    const idx = i * ny + j;
+                    const val = data[idx];
+                    const norm = (val - min) / range;
+                    // Blue (low) -> Red (high)
+                    const hue = (1.0 - norm) * 240;
+                    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                    // Flip Y for display: Origin at Bottom-Left
+                    // j=0 is bottom (max Y on canvas), j=ny-1 is top (min Y on canvas)
+                    const yCanvas = (ny - 1 - j) * scale;
+                    ctx.fillRect(i * scale, yCanvas, scale, scale);
+                }
+            }
+        }
+
+        function startSim() {
+            const n = parseInt(document.getElementById('val_n').value);
+            const m = parseInt(document.getElementById('val_m').value);
+            const mstep = parseInt(document.getElementById('val_mstep').value);
+            
+            document.getElementById('output').innerHTML += `\n--- Starting Simulation (n=${n}, m=${m}, steps=${mstep}) ---\n`;
+            
+            // Use setTimeout to ensure the print above renders before the heavy calculation
+            setTimeout(() => {
+                try {
+                    const result = runSimulation(Module, n, m, mstep);
+                    if (result) {
+                        drawHeatmap('canvas_vel', result.vel, result.nx, result.ny);
+                        drawHeatmap('canvas_u', result.u, result.nx, result.ny);
+                        drawHeatmap('canvas_v', result.v, result.nx, result.ny);
+                        Module.print("Visualization updated.");
+                    }
+                } catch(e) {
+                    console.error(e);
+                    Module.print("Error during simulation: " + e.message);
+                }
+            }, 50);
+        }
+    </script>
+    <script src="lbm.js"></script>
+</body>
+</html>
