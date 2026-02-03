@@ -1,7 +1,7 @@
 #include <float.h>
 #include <iostream>
 #include <math.h>
-#include<fstream>
+#include <fstream>
 using namespace std;
 
 void xy(float x[101], float y[101], float dx, float dy, int n, int m)
@@ -307,8 +307,10 @@ int main()
 			velocity[i][j] = sqrt(u[i][j] * u[i][j] + v[i][j] * v[i][j]);
 		}
 	}
-	ofstream fout;
-	fout.open("Data.dat", ios::app);
+
+	// ofstream fout;
+	// fout.open("Data.dat", ios::app);
+	ostream& fout = cout;  // Use stdout
 	fout << "TITLE = \"Data\"\nvariables = X,Y,U,V,Velocity\nZone t=\"data\"\nI=101,J=101,F=POINT" << endl;
 	for (j = 0; j <= m; j++)
 	{
@@ -317,7 +319,7 @@ int main()
 			fout << x[i] << "\t" << y[j] << "\t" << u[i][j] << "\t" << v[i][j] << "\t" << velocity[i][j] << endl;
 		}
 	}
-	fout.close();
+	// fout.close();
     return 0;
 }
 
