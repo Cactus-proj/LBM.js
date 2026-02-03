@@ -231,19 +231,14 @@ void rhouv(float f[9][101][101], float rho[101][101], float u[101][101], float v
 	}
 }
 
-int main()
+void lid_driven_flow(
+	int n, int m, int mstep,
+	float f[9][101][101], float rho[101][101],
+	float u[101][101], float v[101][101], float velocity[101][101],
+	float x[101], float y[101])
 {
-	const int n = 100, m = 100, mstep=1000;
 	int i, j, l, kk;
 	float w[9], cx[9], cy[9], stmiv[9][9], ev[9][9];
-	// 动态分配内存以避免栈溢出
-	auto f = new float[9][n + 1][m + 1];
-	auto rho = new float[n + 1][m + 1];
-	auto u = new float[n + 1][m + 1];
-	auto v = new float[n + 1][m + 1];
-	auto velocity = new float[n + 1][m + 1];
-	auto x = new float[n + 1];
-	auto y = new float[m + 1];
 	float dx, dy, dt, a1, sumcc, uo, rhoo, alpha, omega, Re, tau;
 	dx = 1.0, dy = dx, dt = 1.0;
 	xy(x, y, dx, dy, n, m);
@@ -252,17 +247,6 @@ int main()
 	a1 = 1.0 / 36.0;
 	static float tminv[9][9] = { { 4 * a1, -4 * a1, 4 * a1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, { 4 * a1, -a1, -2 * a1, 6 * a1, -6 * a1, 0.0, 0.0, 9 * a1, 0.0 }, { 4 * a1, -a1, -2 * a1, 0.0, 0.0, 6 * a1, -6 * a1, -9 * a1, 0.0 }, { 4 * a1, -a1, -2 * a1, -6 * a1, 6 * a1, 0.0, 0.0, 9 * a1, 0.0 },{ 4 * a1, -a1, -2 * a1, 0.0, 0.0, -6 * a1, 6 * a1, -9 * a1, 0.0 }, {4 * a1, 2 * a1, a1, 6 * a1, 3 * a1, 6 * a1, 3 * a1, 0.0, 9 * a1 },{ 4 * a1, 2 * a1, a1, -6 * a1, -3 * a1, 6 * a1, 3 * a1, 0.0, -9 * a1 }, { 4 * a1, 2 * a1, a1, -6 * a1, -3 * a1, -6 * a1, -3 * a1, 0.0, 9 * a1 }, { 4 * a1, 2 * a1, a1, 6 * a1, 3 * a1, -6 * a1, -3 * a1, 0.0, -9 * a1 } };
 
-	cout << "(m" << m << ", n=" << n << ", mstep=" << mstep << ")" << endl;
-	/*ofstream arrayout;
-	arrayout.open("arrayout.dat");
-	for ( i = 0; i <= 8; i++)
-	{
-		for ( j = 0; j <= 8; j++)
-		{
-			arrayout << tminv[i][j]/a1 << "\t";
-		}
-		arrayout << endl;
-	}*/
 	for ( i = 0; i <= 8; i++)
 	{
 		for ( j = 0; j <= 8; j++)
@@ -290,7 +274,6 @@ int main()
 	}
 	init(rho, f, u, v, n, m, rhoo, uo, w);
 
-	cout << "Start computing..." << endl;
 	for ( kk = 1; kk <= mstep; kk++)
 	{
 		collision(u, v, f, rho, w, cx, cy, n, m, omega, tm, tminv, stmiv, sm);
@@ -305,20 +288,33 @@ int main()
 			velocity[i][j] = sqrt(u[i][j] * u[i][j] + v[i][j] * v[i][j]);
 		}
 	}
+}
+
+int main()
+{
+	const int n = 100, m = 100, mstep=1000;
+
+	auto f = new float[9][n + 1][m + 1];
+	auto rho = new float[n + 1][m + 1];
+	auto u = new float[n + 1][m + 1];
+	auto v = new float[n + 1][m + 1];
+	auto velocity = new float[n + 1][m + 1];
+	auto x = new float[n + 1];
+	auto y = new float[m + 1];
+
+	cout << "(m" << m << ", n=" << n << ", mstep=" << mstep << ")" << endl;
+	cout << "Start computing..." << endl;
+	lid_driven_flow(n, m, mstep, f, rho, u, v, velocity, x, y);
 	cout << "Finish computing." << endl;
 
-	// ofstream fout;
-	// fout.open("Data.dat", ios::app);
-	ostream& fout = cout;  // Use stdout
-	fout << "TITLE = \"Data\"\nvariables = X,Y,U,V,Velocity\nZone t=\"data\"\nI=101,J=101,F=POINT" << endl;
-	// for (j = 0; j <= m; j++)
+	cout << "TITLE = \"Data\"\nvariables = X,Y,U,V,Velocity\nZone t=\"data\"\nI=101,J=101,F=POINT" << endl;
+	// for (int j = 0; j <= m; j++)
 	// {
-	// 	for (i = 0; i <= n; i++)
+	// 	for (int i = 0; i <= n; i++)
 	// 	{
-	// 		fout << x[i] << "\t" << y[j] << "\t" << u[i][j] << "\t" << v[i][j] << "\t" << velocity[i][j] << endl;
+	// 		cout << x[i] << "\t" << y[j] << "\t" << u[i][j] << "\t" << v[i][j] << "\t" << velocity[i][j] << endl;
 	// 	}
 	// }
-	// fout.close();
 
 	// 释放内存
 	delete[] f;
@@ -331,4 +327,3 @@ int main()
 
     return 0;
 }
-
