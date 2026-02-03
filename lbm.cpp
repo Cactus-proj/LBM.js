@@ -1,7 +1,11 @@
 #include <float.h>
 #include <iostream>
 #include <math.h>
-#include <fstream>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/bind.h>
+#include <cstdint>
+#endif
+
 using namespace std;
 
 void xy(float x[101], float y[101], float dx, float dy, int n, int m)
@@ -327,3 +331,23 @@ int main()
 
     return 0;
 }
+
+#ifdef __EMSCRIPTEN__
+using namespace emscripten;
+
+void lid_driven_flow_js(int n, int m, int mstep, uintptr_t f_ptr, uintptr_t rho_ptr, uintptr_t u_ptr, uintptr_t v_ptr, uintptr_t velocity_ptr, uintptr_t x_ptr, uintptr_t y_ptr) {
+    lid_driven_flow(n, m, mstep,
+        reinterpret_cast<float (*)[101][101]>(f_ptr),
+        reinterpret_cast<float (*)[101]>(rho_ptr),
+        reinterpret_cast<float (*)[101]>(u_ptr),
+        reinterpret_cast<float (*)[101]>(v_ptr),
+        reinterpret_cast<float (*)[101]>(velocity_ptr),
+        reinterpret_cast<float *>(x_ptr),
+        reinterpret_cast<float *>(y_ptr)
+    );
+}
+
+EMSCRIPTEN_BINDINGS(lbm_module) {
+    emscripten::function("lid_driven_flow", &lid_driven_flow_js);
+}
+#endif
