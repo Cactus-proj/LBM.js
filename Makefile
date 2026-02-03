@@ -10,4 +10,4 @@ lbm: lbm.cpp
 	$(EMCC) $(EMCC_FLAGS) lbm.cpp -o index.html
 
 lbm_js: lbm.cpp
-	$(EMCC) $(EMCC_FLAGS) $(EMCC_BIND) lbm.cpp -o lbm.js
+	$(EMCC) $(EMCC_FLAGS) $(EMCC_BIND) lbm.cpp -o lbm_core.js

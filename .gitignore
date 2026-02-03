@@ -3,7 +3,4 @@
 dist/
 
 # [dev] for github-pages on main branch
-index.html
-index.js
-index.wasm
-lbm.js
+*.js
